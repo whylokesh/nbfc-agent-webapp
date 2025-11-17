@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, RotateCcw, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 const NetworkLogo = ({ className }) => (
   <img
@@ -27,7 +28,7 @@ const ChatInput = ({ onSend, disabled }) => {
     onSend({ role: "user", content: content.trim() });
     setContent("");
   };
-
+  
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -111,22 +112,49 @@ const ChatMessage = ({ message }) => {
           ? 'bg-blue-600 text-white rounded-tr-sm'
           : 'bg-gray-50 text-gray-900 rounded-tl-sm'
           }`}>
-          <div className="whitespace-pre-wrap text-base leading-7">
-            {message.content}
-          </div>
+          {isUser ? (
+            <div className="whitespace-pre-wrap text-base leading-7">
+              {message.content}
+            </div>
+          ) : (
+            <div className="text-base leading-7 prose prose-sm max-w-none">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                  strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  ul: ({ children }) => <ul className="list-disc list-outside mb-3 ml-4 space-y-1.5">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-outside mb-3 ml-4 space-y-1.5">{children}</ol>,
+                  li: ({ children }) => <li className="pl-1">{children}</li>,
+                  h1: ({ children }) => <h1 className="text-xl font-bold mb-3 mt-4 first:mt-0 text-gray-900">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-lg font-semibold mb-2 mt-4 first:mt-0 text-gray-900">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-base font-semibold mb-1.5 mt-3 first:mt-0 text-gray-900">{children}</h3>,
+                  code: ({ children }) => <code className="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800">{children}</code>,
+                  pre: ({ children }) => <pre className="bg-gray-200 p-3 rounded mb-3 overflow-x-auto text-sm">{children}</pre>,
+                  hr: () => <hr className="my-4 border-gray-300" />,
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const WelcomeSection = () => {
+const WelcomeSection = ({ onSend }) => {
   const suggestions = [
     "Show top 5 leads by score this week",
     "List applications rejected last month and reasons",
     "Ping the sales team for lead 123 with an urgent follow-up",
     "What are the pending follow-ups for this week?"
   ];
+
+  const handleSuggestionClick = (suggestion) => {
+    onSend({ role: "user", content: suggestion });
+  };
 
   return (
     <div className="text-center py-12">
@@ -150,7 +178,8 @@ const WelcomeSection = () => {
         {suggestions.map((suggestion, index) => (
           <button
             key={index}
-            className="p-4 text-left bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all duration-200 group"
+            onClick={() => handleSuggestionClick(suggestion)}
+            className="p-4 text-left bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all duration-200 group cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <span className="text-gray-700 text-sm font-medium group-hover:text-blue-600 transition-colors">
@@ -205,7 +234,7 @@ const ChatContainer = ({ messages, loading, onSend, onReset }) => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4">
-          {!hasMessages && !loading && <WelcomeSection />}
+          {!hasMessages && !loading && <WelcomeSection onSend={onSend} />}
 
           {hasMessages && (
             <div className="py-8">
@@ -236,27 +265,61 @@ const ChatContainer = ({ messages, loading, onSend, onReset }) => {
 export default function Page() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
 
   const handleSend = async (message) => {
     setMessages(prev => [...prev, message]);
     setLoading(true);
 
-    // Simulate AI response - replace with your actual API call
-    setTimeout(() => {
-      const response = {
-        role: 'assistant',
-        content: `I understand you're asking about "${message.content}". As your SK Assistant assistant, I can query and analyze lead/loan data from the PostgreSQL database, provide structured business insights, and notify the sales team when needed.
-
-This is a placeholder response - in the full version, I'll connect to your database and provide real-time analysis of loan leads, applications, and follow-ups.`
+    try {
+      // Prepare request body
+      const requestBody = {
+        message: message.content,
+        session_id: sessionId || "" // Send empty string for new chats, or existing session_id
       };
-      setMessages(prev => [...prev, response]);
+
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Extract and update session_id from response if present
+      if (data.session_id) {
+        setSessionId(data.session_id);
+      }
+
+      // Create assistant message from response
+      const assistantMessage = {
+        role: 'assistant',
+        content: data.message || data.response || 'No response received'
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error calling API:', error);
+      const errorMessage = {
+        role: 'assistant',
+        content: `Sorry, I encountered an error: ${error.message}. Please try again.`
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   const handleReset = () => {
     setMessages([]);
     setLoading(false);
+    setSessionId(null); // Reset session_id for new chat
   };
 
   return (
