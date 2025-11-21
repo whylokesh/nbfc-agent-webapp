@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "SK Assistant - AI-Powered Lead Intelligence",
-  description: "Your intelligent AI assistant for SK Finance. Navigate through loan leads, analyze applications, and streamline your sales operations.",
+  title: "LOS AI - AI-Powered Lead Intelligence",
+  description: "Your intelligent AI assistant for the LOS Platform. Navigate through loan leads, analyze applications, and streamline your sales operations.",
 };
 
 export default function RootLayout({ children }) {

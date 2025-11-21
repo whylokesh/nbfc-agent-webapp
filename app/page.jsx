@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, MessageSquare, Mic, Settings, User, Menu, X, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import Image from 'next/image';
 
 // Sidebar Component
 const Sidebar = ({ isOpen, onClose, currentPage, onNavigate, onNewChat }) => {
@@ -24,8 +26,8 @@ const Sidebar = ({ isOpen, onClose, currentPage, onNavigate, onNewChat }) => {
       `}>
         {/* Logo */}
         <div className="mb-8 w-10 h-10 flex items-center justify-center">
-          <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">SK</span>
+          <div className="w-8 h-8 bg-gradient-to-br rounded-lg flex items-center justify-center">
+            <Image src="/images/artificial-intelligence.png" width={32} height={32} alt="LOS AI Logo" />
           </div>
         </div>
 
@@ -87,12 +89,12 @@ const Navbar = ({ onMenuClick }) => {
 
       {/* Center: Title (Desktop) */}
       <div className="hidden lg:block">
-        <h1 className="text-black font-medium text-sm">SK Assistant</h1>
+        <h1 className="text-black font-medium text-sm">LOS AI</h1>
       </div>
 
       {/* Mobile Center: Title */}
       <div className="lg:hidden flex-1 text-center">
-        <h1 className="text-black font-medium text-sm">SK Assistant</h1>
+        <h1 className="text-black font-medium text-sm">LOS AI</h1>
       </div>
 
       {/* Right: Actions */}
@@ -116,20 +118,32 @@ const Navbar = ({ onMenuClick }) => {
 
 // Welcome Screen Component
 const WelcomeScreen = ({ onSend }) => {
-  const suggestions = [
-    "Show top 5 leads by score this week",
-    "List applications rejected last month",
-    "Ping sales team for lead 123",
-    "What are pending follow-ups?"
+  const allSuggestions = [
+    "Show top 5 lead sources",
+    "Highest loan amount requested?",
+    "Most common loan purpose?",
+    "Highest sanction amount?",
+    "Top branches by sanctioned loans",
+    // "Ping sales team about this",
+    "List rejected applications",
+    "Show pending follow-ups"
   ];
+
+  const [randomSuggestions, setRandomSuggestions] = useState([]);
+
+  useEffect(() => {
+    // Shuffle and pick 4
+    const shuffled = [...allSuggestions].sort(() => 0.5 - Math.random());
+    setRandomSuggestions(shuffled.slice(0, 4));
+  }, []);
 
   return (
     <div className="flex-1 flex items-center justify-center px-4 pb-20">
       <div className="max-w-2xl w-full text-center">
         {/* Logo */}
         <div className="my-8 flex justify-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-gray-600 rounded-2xl flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">SK</span>
+          <div className="w-16 h-16 bg-gradient-to-br rounded-2xl flex items-center justify-center">
+            <Image src="/images/artificial-intelligence.png" width={64} height={64} alt="LOS AI Logo" />
           </div>
         </div>
 
@@ -139,16 +153,16 @@ const WelcomeScreen = ({ onSend }) => {
         </h1>
 
         <p className="text-gray-600 text-base mb-10">
-          Your intelligent AI assistant for SK Finance
+          Your intelligent AI assistant for the LOS Platform
         </p>
 
         {/* Suggestions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {suggestions.map((suggestion, index) => (
+          {randomSuggestions.map((suggestion, index) => (
             <button
               key={index}
               onClick={() => onSend({ role: "user", content: suggestion })}
-              className="p-4 text-left bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all text-sm text-black"
+              className="p-4 text-left bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all text-sm text-black truncate"
             >
               {suggestion}
             </button>
@@ -166,21 +180,22 @@ const ChatMessage = ({ message }) => {
   return (
     <div className={`flex gap-4 mb-6 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser && (
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-semibold text-xs">SK</span>
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0">
+          <Image src="/images/artificial-intelligence.png" width={32} height={32} alt="LOS AI Logo" />
         </div>
       )}
 
       <div className={`max-w-[80%] ${isUser ? 'order-first' : ''}`}>
         <div className={`rounded-2xl px-4 py-3 ${isUser
-            ? 'bg-black text-white'
-            : 'bg-gray-100 text-black'
+          ? 'bg-black text-white'
+          : 'bg-gray-100 text-black'
           }`}>
           {isUser ? (
             <p className="text-sm leading-relaxed">{message.content}</p>
           ) : (
             <div className="text-sm leading-relaxed prose prose-sm max-w-none">
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 components={{
                   p: ({ children }) => <p className="mb-2 last:mb-0 text-black">{children}</p>,
                   strong: ({ children }) => <strong className="font-semibold text-black">{children}</strong>,
@@ -188,6 +203,25 @@ const ChatMessage = ({ message }) => {
                   ol: ({ children }) => <ol className="list-decimal ml-4 mb-2 space-y-1">{children}</ol>,
                   li: ({ children }) => <li className="text-black">{children}</li>,
                   code: ({ children }) => <code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs text-black">{children}</code>,
+                  table: ({ children }) => (
+                    <div className="overflow-x-auto my-4 rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200 text-sm">{children}</table>
+                    </div>
+                  ),
+                  thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+                  tbody: ({ children }) => <tbody className="divide-y divide-gray-200 bg-white">{children}</tbody>,
+                  tr: ({ children }) => <tr className="transition-colors hover:bg-gray-50/50">{children}</tr>,
+                  th: ({ children }) => (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {children}
+                    </th>
+                  ),
+                  td: ({ children }) => <td className="px-4 py-3 text-gray-900 whitespace-nowrap">{children}</td>,
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      {children}
+                    </a>
+                  ),
                 }}
               >
                 {message.content}
@@ -210,8 +244,8 @@ const ChatMessage = ({ message }) => {
 const TypingIndicator = () => {
   return (
     <div className="flex gap-4 mb-6">
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center flex-shrink-0">
-        <span className="text-white font-semibold text-xs">SK</span>
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0">
+        <Image src="/images/artificial-intelligence.png" width={32} height={32} alt="LOS AI Logo" />
       </div>
       <div className="bg-gray-100 rounded-2xl px-4 py-3">
         <div className="flex gap-1">
@@ -262,7 +296,7 @@ const ChatInput = ({ onSend, disabled }) => {
           <textarea
             ref={textareaRef}
             className="flex-1 bg-transparent text-black placeholder-gray-500 text-sm resize-none focus:outline-none min-h-[24px] max-h-[120px]"
-            placeholder="Message SK Assistant..."
+            placeholder="Message LOS AI..."
             value={content}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
@@ -273,15 +307,15 @@ const ChatInput = ({ onSend, disabled }) => {
             onClick={handleSend}
             disabled={!content.trim() || disabled}
             className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${content.trim() && !disabled
-                ? 'bg-black text-white hover:bg-gray-800'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-black text-white hover:bg-gray-800'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
           >
             <Send className="w-4 h-4" />
           </button>
         </div>
         <p className="text-xs text-gray-500 text-center mt-3">
-          SK Assistant can make mistakes. Verify important information.
+          LOS AI can make mistakes. Verify important information.
         </p>
       </div>
     </div>

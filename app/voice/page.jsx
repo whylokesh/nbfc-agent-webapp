@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, MessageSquare, Mic, Settings, User, Menu, Plus } from 'lucide-react';
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 // Sidebar Component
 const Sidebar = ({ isOpen, onClose, currentPage, onNavigate, onNewChat }) => {
@@ -22,8 +23,8 @@ const Sidebar = ({ isOpen, onClose, currentPage, onNavigate, onNewChat }) => {
         w-16 flex flex-col items-center py-4
       `}>
                 <div className="mb-8 w-10 h-10 flex items-center justify-center">
-                    <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">SK</span>
+                    <div className="w-8 h-8 bg-gradient-to-br rounded-lg flex items-center justify-center">
+                        <Image src="/images/artificial-intelligence.png" width={32} height={32} alt="LOS AI Logo" />
                     </div>
                 </div>
 
@@ -72,7 +73,7 @@ const Sidebar = ({ isOpen, onClose, currentPage, onNavigate, onNewChat }) => {
 // Navbar Component
 const Navbar = ({ onMenuClick }) => {
     return (
-        <nav className="h-14 border-b border-gray-200 bg-white flex items-center justify-between px-4 lg:px-6">
+        <nav className="h-14 border-b border-gray-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10">
             <button
                 onClick={onMenuClick}
                 className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-600 hover:text-black transition-colors"
@@ -81,11 +82,11 @@ const Navbar = ({ onMenuClick }) => {
             </button>
 
             <div className="hidden lg:block">
-                <h1 className="text-black font-medium text-sm">SK Voice Assistant</h1>
+                <h1 className="text-black font-medium text-sm">LOS AI Voice</h1>
             </div>
 
             <div className="lg:hidden flex-1 text-center">
-                <h1 className="text-black font-medium text-sm">SK Voice Assistant</h1>
+                <h1 className="text-black font-medium text-sm">LOS AI Voice</h1>
             </div>
 
             <div className="flex items-center gap-2">
@@ -112,12 +113,12 @@ const WaveAnimation = ({ state }) => {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {(state === "recording" || state === "speaking") && (
                 <>
-                    <div className={`absolute w-64 h-64 rounded-full ${state === "recording" ? "bg-blue-500/10" : "bg-green-500/10"
-                        } animate-ping`} style={{ animationDuration: '2s' }}></div>
+                    <div className={`absolute w-96 h-96 rounded-full ${state === "recording" ? "bg-blue-500/5" : "bg-green-500/5"
+                        } animate-ping`} style={{ animationDuration: '3s' }}></div>
+                    <div className={`absolute w-72 h-72 rounded-full ${state === "recording" ? "bg-blue-500/10" : "bg-green-500/10"
+                        } animate-ping`} style={{ animationDuration: '2.5s', animationDelay: '0.2s' }}></div>
                     <div className={`absolute w-48 h-48 rounded-full ${state === "recording" ? "bg-blue-500/20" : "bg-green-500/20"
-                        } animate-ping`} style={{ animationDuration: '1.5s', animationDelay: '0.3s' }}></div>
-                    <div className={`absolute w-32 h-32 rounded-full ${state === "recording" ? "bg-blue-500/30" : "bg-green-500/30"
-                        } animate-ping`} style={{ animationDuration: '1s', animationDelay: '0.6s' }}></div>
+                        } animate-ping`} style={{ animationDuration: '2s', animationDelay: '0.4s' }}></div>
                 </>
             )}
         </div>
@@ -128,14 +129,14 @@ const WaveAnimation = ({ state }) => {
 const CircularWaveBars = () => {
     return (
         <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex gap-1 items-end h-8">
+            <div className="flex gap-1.5 items-center h-12">
                 {[...Array(5)].map((_, i) => (
                     <div
                         key={i}
-                        className="w-1 bg-green-500 rounded-full animate-wave"
+                        className="w-1.5 bg-white rounded-full animate-wave shadow-[0_0_10px_rgba(255,255,255,0.5)]"
                         style={{
                             animationDelay: `${i * 0.1}s`,
-                            height: '100%'
+                            height: '40%'
                         }}
                     ></div>
                 ))}
@@ -233,27 +234,34 @@ function VoiceRecorder({ onResult, sessionId, setSessionId, setState, state }) {
     };
 
     return (
-        <div className="relative">
+        <div className="relative group">
             <WaveAnimation state={state} />
+
+            {/* Glow Effect */}
+            <div className={`absolute inset-0 rounded-full blur-xl transition-all duration-500 ${state === "recording" ? "bg-blue-500/40 scale-125" :
+                state === "processing" ? "bg-purple-500/40 scale-110" :
+                    state === "speaking" ? "bg-green-500/40 scale-125" :
+                        "bg-gray-200/0 scale-100 group-hover:bg-blue-500/20 group-hover:scale-110"
+                }`}></div>
 
             <button
                 onClick={handleClick}
                 disabled={state === "processing" || state === "speaking"}
-                className={`relative z-10 w-32 h-32 md:w-40 md:h-40 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center ${state === "recording"
-                        ? "bg-blue-500 scale-105"
-                        : state === "processing"
-                            ? "bg-purple-500 scale-100"
-                            : state === "speaking"
-                                ? "bg-green-500 scale-105"
-                                : state === "error"
-                                    ? "bg-red-500 scale-95"
-                                    : "bg-blue-500 hover:scale-110 active:scale-95"
-                    } disabled:opacity-60`}
+                className={`relative z-10 w-32 h-32 md:w-40 md:h-40 rounded-full shadow-2xl transition-all duration-500 flex items-center justify-center border-4 ${state === "recording"
+                    ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-300 scale-110"
+                    : state === "processing"
+                        ? "bg-gradient-to-br from-purple-500 to-purple-600 border-purple-300 scale-100"
+                        : state === "speaking"
+                            ? "bg-gradient-to-br from-green-500 to-green-600 border-green-300 scale-110"
+                            : state === "error"
+                                ? "bg-gradient-to-br from-red-500 to-red-600 border-red-300 scale-95"
+                                : "bg-white border-gray-100 hover:border-blue-200 hover:scale-105"
+                    } disabled:cursor-not-allowed`}
             >
                 {state === "recording" ? (
-                    <div className="w-12 h-12 bg-white rounded-lg animate-pulse"></div>
+                    <div className="w-12 h-12 bg-white rounded-xl animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.5)]"></div>
                 ) : state === "processing" ? (
-                    <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : state === "speaking" ? (
                     <CircularWaveBars />
                 ) : state === "error" ? (
@@ -261,7 +269,7 @@ function VoiceRecorder({ onResult, sessionId, setSessionId, setState, state }) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 ) : (
-                    <Mic className="w-16 h-16 md:w-20 md:h-20 text-white" />
+                    <Mic className="w-16 h-16 md:w-20 md:h-20 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 )}
             </button>
         </div>
@@ -273,18 +281,18 @@ function StatusText({ state }) {
     const messages = {
         idle: "Tap to speak",
         recording: "Listening...",
-        processing: "Processing...",
+        processing: "Thinking...",
         speaking: "Speaking...",
         error: "Error occurred"
     };
 
     return (
-        <div className="text-center mt-8">
-            <p className={`text-lg font-medium transition-colors ${state === "recording" ? "text-blue-600" :
-                    state === "processing" ? "text-purple-600" :
-                        state === "speaking" ? "text-green-600" :
-                            state === "error" ? "text-red-600" :
-                                "text-gray-600"
+        <div className="text-center mt-12 h-8">
+            <p className={`text-xl font-medium transition-all duration-300 ${state === "recording" ? "text-blue-600 scale-110" :
+                state === "processing" ? "text-purple-600 animate-pulse" :
+                    state === "speaking" ? "text-green-600 scale-110" :
+                        state === "error" ? "text-red-600" :
+                            "text-gray-400"
                 }`}>
                 {messages[state]}
             </p>
@@ -293,33 +301,33 @@ function StatusText({ state }) {
 }
 
 // Conversation Display
-// function ConversationDisplay({ userText, aiText, isVisible }) {
-//     if (!isVisible || (!userText && !aiText)) return null;
+function ConversationDisplay({ userText, aiText, isVisible }) {
+    if (!isVisible && (!userText && !aiText)) return null;
 
-//     return (
-//         <div className="w-full max-w-2xl mx-auto px-4 space-y-4">
-//             {userText && (
-//                 <div className="flex justify-end animate-slideIn">
-//                     <div className="bg-blue-500 text-white rounded-3xl px-6 py-3 max-w-md shadow-lg">
-//                         <p className="text-sm leading-relaxed">{userText}</p>
-//                     </div>
-//                 </div>
-//             )}
+    return (
+        <div className={`w-full max-w-3xl mx-auto px-4 space-y-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+            {userText && (
+                <div className="flex justify-end">
+                    <div className="bg-white/80 backdrop-blur-sm border border-white/20 text-gray-800 rounded-2xl rounded-tr-sm px-6 py-4 max-w-lg shadow-lg animate-slideInRight">
+                        <p className="text-base leading-relaxed font-medium">{userText}</p>
+                    </div>
+                </div>
+            )}
 
-//             {aiText && (
-//                 <div className="flex justify-start animate-slideIn">
-//                     <div className="bg-gray-100 text-gray-900 rounded-3xl px-6 py-3 max-w-md shadow-lg">
-//                         <div className="prose prose-sm max-w-none">
-//                             <ReactMarkdown>
-//                                 {aiText}
-//                             </ReactMarkdown>
-//                         </div>
-//                     </div>
-//                 </div>
-//             )}
-//         </div>
-//     );
-// }
+            {aiText && (
+                <div className="flex justify-start">
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-2xl rounded-tl-sm px-6 py-4 max-w-lg shadow-lg animate-slideInLeft">
+                        <div className="prose prose-invert prose-sm max-w-none">
+                            <ReactMarkdown>
+                                {aiText}
+                            </ReactMarkdown>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 // Main Component
 export default function VoicePage() {
@@ -343,11 +351,11 @@ export default function VoicePage() {
         setCurrentAiText(data.reply);
         setShowConversation(true);
 
+        // Keep conversation visible longer or until next interaction
         setTimeout(() => {
-            setShowConversation(false);
-            setCurrentUserText("");
-            setCurrentAiText("");
-        }, 8000);
+            // Optional: fade out or keep it
+            // setShowConversation(false);
+        }, 15000);
     };
 
     const handleNavigate = (page) => {
@@ -374,25 +382,26 @@ export default function VoicePage() {
           0%, 100% { height: 20%; }
           50% { height: 100%; }
         }
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
         }
         .animate-wave {
           animation: wave 0.8s ease-in-out infinite;
         }
-        .animate-slideIn {
-          animation: slideIn 0.4s ease-out;
+        .animate-slideInRight {
+          animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animate-slideInLeft {
+          animation: slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
 
-            <div className="flex h-screen bg-white overflow-hidden">
+            <div className="flex h-screen bg-gray-50 overflow-hidden">
                 <Sidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
@@ -401,12 +410,20 @@ export default function VoicePage() {
                     onNewChat={handleNewChat}
                 />
 
-                <div className="flex-1 flex flex-col lg:ml-16">
+                <div className="flex-1 flex flex-col lg:ml-16 relative">
+                    {/* Ambient Background */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.8),rgba(240,240,250,1))] -z-10"></div>
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-30 pointer-events-none">
+                        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-200/30 blur-3xl"></div>
+                        <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-3xl"></div>
+                    </div>
+
                     <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-                    <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-                        {/* Top Section - Conversation Display */}
-                        {/* <div className="absolute top-8 left-0 right-0 z-10">
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden max-w-5xl mx-auto w-full">
+
+                        {/* Conversation Display Area */}
+                        {/* <div className="flex-1 w-full flex flex-col justify-center min-h-[200px]">
                             <ConversationDisplay
                                 userText={currentUserText}
                                 aiText={currentAiText}
@@ -414,8 +431,8 @@ export default function VoicePage() {
                             />
                         </div> */}
 
-                        {/* Center Section - Voice Button */}
-                        <div className="flex flex-col items-center justify-center">
+                        {/* Voice Controls Area */}
+                        <div className="flex flex-col items-center justify-center pb-12 pt-8">
                             <VoiceRecorder
                                 onResult={handleResult}
                                 sessionId={sessionId}
@@ -428,9 +445,9 @@ export default function VoicePage() {
 
                         {/* Session ID Badge */}
                         {sessionId && (
-                            <div className="absolute bottom-8 right-8 px-4 py-2 bg-gray-100 rounded-full border border-gray-200 shadow-sm">
+                            <div className="absolute bottom-6 right-6 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-gray-200 shadow-sm">
                                 <p className="text-xs text-gray-500 font-mono flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                                     Session: {sessionId.slice(0, 8)}
                                 </p>
                             </div>
